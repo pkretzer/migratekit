@@ -144,6 +144,24 @@ func (t *OpenStack) Connect(ctx context.Context) error {
                 volumeImageMetadata["hw_qemu_guest_agent"] = "yes"
             }
 
+						customTraitRequired, ok := ctx.Value("customTraitRequired").(string);
+						if ok && customTraitRequired != "" {
+							log.WithFields(log.Fields{
+									"volume_id": volume.ID,
+									customTraitRequired:   "required",
+							}).Info("Volume set required custom trait metadata parameter")
+							volumeImageMetadata[customTraitRequired] = "required"
+						}
+
+						customTraitForbidden, ok := ctx.Value("customTraitForbidden").(string);
+						if ok && customTraitForbidden != "" {
+							log.WithFields(log.Fields{
+									"volume_id": volume.ID,
+									customTraitForbidden:   "forbidden",
+							}).Info("Volume set forbidden custom trait metadata parameter")
+							volumeImageMetadata[customTraitForbidden] = "forbidden"
+						}
+
 			if types.GuestOsDescriptorFirmwareType(o.Config.Firmware) == types.GuestOsDescriptorFirmwareTypeEfi {
 				log.WithFields(log.Fields{
 					"volume_id": volume.ID,
