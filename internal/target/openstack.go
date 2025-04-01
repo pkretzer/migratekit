@@ -121,11 +121,18 @@ func (t *OpenStack) Connect(ctx context.Context) error {
                     vmOsType := "linux" // linux is the default os type, TODO: Add mapping for all possible GuestIds
                     if strings.Contains(guestIdLower, "windows") {
                         vmOsType = "windows"
-                    }
+                    } else {
+											volumeImageMetadata["trait:CUSTOM_LINUX_ONLY"] = "required"
+										}
                     volumeImageMetadata["os_type"] = vmOsType
+										
                 case "":
                 default:
-                    volumeImageMetadata["os_type"] = osTypeCMD
+									volumeImageMetadata["os_type"] = osTypeCMD
+									if !strings.Contains(osTypeCMD, "windows") {
+										volumeImageMetadata["trait:CUSTOM_LINUX_ONLY"] = "required"
+									}
+										
 
             }
 
