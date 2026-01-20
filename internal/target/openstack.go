@@ -126,9 +126,17 @@ func (t *OpenStack) Connect(ctx context.Context) error {
 				if strings.Contains(guestIdLower, "windows") {
 					vmOsType = "windows"
 				} else {
+					// hardcode trait CUSTOM_LINUX_ONLY
 					volumeImageMetadata["trait:CUSTOM_LINUX_ONLY"] = "required"
 				}
 				volumeImageMetadata["os_type"] = vmOsType
+
+				//hardcode metadata hw_video_model to qxl
+				log.WithFields(log.Fields{
+					"volume_id":      volume.ID,
+					"hw_video_model": "qxl",
+				}).Info("Set the hw_video_model")
+				volumeImageMetadata["hw_video_model"] = "qxl"
 
 			case "":
 			default:
