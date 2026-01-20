@@ -190,6 +190,7 @@ There are a few optional flags to define the following:
                  and "windows"
 -   `--enable-qemu-guest-agent`: Sets the "hw_qemu_guest_agent" volume (image) metadata parameter to "yes".
 -   `--custom-trait`: Sets a custom trait to required in the volume (image) metadata for nova scheduling) e.g. `--custom-trait trait:CUSTOM_LICENSING`.
+-   `--hw-video-model`: Flag to set the hw_video_model type to a supported one like vga, qxl or virtio (default). Other parameters possible depending on openstack distribution.
 
 ## Contributing
 
