@@ -126,6 +126,7 @@ func (t *OpenStack) Connect(ctx context.Context) error {
 				if strings.Contains(guestIdLower, "windows") {
 					vmOsType = "windows"
 				} else {
+					// hardcode trait CUSTOM_LINUX_ONLY
 					volumeImageMetadata["trait:CUSTOM_LINUX_ONLY"] = "required"
 				}
 				volumeImageMetadata["os_type"] = vmOsType
