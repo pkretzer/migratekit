@@ -103,9 +103,13 @@ func (t *OpenStack) Connect(ctx context.Context) error {
 				return err
 			}
 
-
 			var o mo.VirtualMachine
-			err = t.VirtualMachine.Properties(ctx, t.VirtualMachine.Reference(), []string{"config.firmware", "config.guestId", "config.guestFullName"}, &o)
+			err = t.VirtualMachine.Properties(ctx, t.VirtualMachine.Reference(), []string{
+				"config.bootOptions",
+				"config.firmware",
+				"config.guestFullName",
+				"config.guestId",
+			}, &o)
 			if err != nil {
 				return err
 			}
@@ -115,34 +119,34 @@ func (t *OpenStack) Connect(ctx context.Context) error {
 			}).Info("VMware GustId")
 
 			volumeImageMetadata := map[string]string{}
-            switch osTypeCMD := ctx.Value("osType").(string); osTypeCMD{
-                case "auto":
-                    guestIdLower := strings.ToLower(o.Config.GuestId)
-                    vmOsType := "linux" // linux is the default os type, TODO: Add mapping for all possible GuestIds
-                    if strings.Contains(guestIdLower, "windows") {
-                        vmOsType = "windows"
-                    }
-                    volumeImageMetadata["os_type"] = vmOsType
-                case "":
-                default:
-                    volumeImageMetadata["os_type"] = osTypeCMD
+			switch osTypeCMD := ctx.Value("osType").(string); osTypeCMD {
+			case "auto":
+				guestIdLower := strings.ToLower(o.Config.GuestId)
+				vmOsType := "linux" // linux is the default os type, TODO: Add mapping for all possible GuestIds
+				if strings.Contains(guestIdLower, "windows") {
+					vmOsType = "windows"
+				}
+				volumeImageMetadata["os_type"] = vmOsType
+			case "":
+			default:
+				volumeImageMetadata["os_type"] = osTypeCMD
 
-            }
+			}
 
-            if osType, ok := volumeImageMetadata["os_type"]; ok {
-                log.WithFields(log.Fields{
-                    "volume_id": volume.ID,
-                    "os_type":   osType,
-                }).Info("Volume set os type")
-            }
+			if osType, ok := volumeImageMetadata["os_type"]; ok {
+				log.WithFields(log.Fields{
+					"volume_id": volume.ID,
+					"os_type":   osType,
+				}).Info("Volume set os type")
+			}
 
-            if ctx.Value("enableQemuGuestAgent").(bool) {
-                log.WithFields(log.Fields{
-                    "volume_id": volume.ID,
-                    "hw_qemu_guest_agent":   "yes",
-                }).Info("Volume enable qemu quest agent metadata parameter")
-                volumeImageMetadata["hw_qemu_guest_agent"] = "yes"
-            }
+			if ctx.Value("enableQemuGuestAgent").(bool) {
+				log.WithFields(log.Fields{
+					"volume_id":           volume.ID,
+					"hw_qemu_guest_agent": "yes",
+				}).Info("Volume enable qemu quest agent metadata parameter")
+				volumeImageMetadata["hw_qemu_guest_agent"] = "yes"
+			}
 
 						customTrait, ok := ctx.Value("customTrait").(string);
 						if ok && customTrait != "" {
@@ -160,6 +164,16 @@ func (t *OpenStack) Connect(ctx context.Context) error {
 				volumeImageMetadata["hw_machine_type"] = "q35"
 				volumeImageMetadata["hw_firmware_type"] = "uefi"
 			}
+
+			if o.Config.BootOptions.EfiSecureBootEnabled != nil {
+				if *o.Config.BootOptions.EfiSecureBootEnabled {
+					log.WithFields(log.Fields{
+						"volume_id": volume.ID,
+					}).Info("Setting volume to be UEFI Secure Boot")
+					volumeImageMetadata["os_secure_boot"] = "required"
+				}
+			}
+
 			err = volumes.SetImageMetadata(ctx, t.ClientSet.BlockStorage, volume.ID, volumes.ImageMetadataOpts{
 				Metadata: volumeImageMetadata,
 			}).ExtractErr()
